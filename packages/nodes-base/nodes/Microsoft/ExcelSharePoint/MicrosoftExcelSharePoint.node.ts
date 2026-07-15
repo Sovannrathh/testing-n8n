@@ -6,6 +6,7 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
+import * as workbook from './actions/workbook/Workbook.resource';
 import * as clear from './actions/worksheet/clear.operation';
 import * as deleteWorksheet from './actions/worksheet/deleteWorksheet.operation';
 import * as readRows from './actions/worksheet/readRows.operation';
@@ -82,6 +83,10 @@ export class MicrosoftExcelSharePoint implements INodeType {
 						name: 'Sheet',
 						value: 'worksheet',
 					},
+					{
+						name: 'Workbook',
+						value: 'workbook',
+					},
 				],
 				default: 'worksheet',
 			},
@@ -121,6 +126,7 @@ export class MicrosoftExcelSharePoint implements INodeType {
 			...clear.description,
 			...deleteWorksheet.description,
 			...readRows.description,
+			...workbook.description,
 		],
 	};
 
@@ -143,6 +149,14 @@ export class MicrosoftExcelSharePoint implements INodeType {
 
 		if (resource === 'worksheet' && operation === 'deleteWorksheet') {
 			return [await deleteWorksheet.execute.call(this, items)];
+		}
+
+		if (resource === 'workbook' && operation === 'addWorksheet') {
+			return [await workbook.addWorksheet.execute.call(this, items)];
+		}
+
+		if (resource === 'workbook' && operation === 'deleteWorkbook') {
+			return [await workbook.deleteWorkbook.execute.call(this, items)];
 		}
 
 		throw new NodeOperationError(
