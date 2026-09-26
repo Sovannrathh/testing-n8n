@@ -1,0 +1,26 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=UTC
+      - TZ=UTC
+      - N8N_SECURE_COOKIE=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  # n8n's built-in --tunnel flag was removed; this gives a free public HTTPS URL
+  # for the Facebook webhook without needing a Cloudflare account. Read the URL
+  # from `docker compose logs tunnel` after startup (changes on every restart).
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --url http://n8n:5678
+    depends_on:
+      - n8n
+
+volumes:
+  n8n_data:
+    external: true

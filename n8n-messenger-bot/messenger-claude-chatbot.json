@@ -1,0 +1,120 @@
+{
+  "name": "Messenger Claude Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "authType": "accessToken",
+        "appId": "YOUR_FACEBOOK_APP_ID",
+        "object": "page",
+        "fields": ["messages"]
+      },
+      "type": "n8n-nodes-base.facebookTrigger",
+      "typeVersion": 1,
+      "position": [-200, 0],
+      "id": "3f7f9c0a-1111-4a1a-8b1a-aaaaaaaaaaa1",
+      "name": "Facebook Trigger",
+      "credentials": {
+        "facebookGraphAppApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Facebook Graph App account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messaging[0].message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful, friendly assistant replying to Facebook Messenger messages. Keep replies concise and conversational."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [80, 0],
+      "id": "3f7f9c0a-2222-4a1a-8b1a-aaaaaaaaaaa2",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-3-5-sonnet-20241022"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [80, 220],
+      "id": "3f7f9c0a-3333-4a1a-8b1a-aaaaaaaaaaa3",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authType": "accessToken",
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "default",
+        "node": "YOUR_FACEBOOK_PAGE_ID/messages",
+        "options": {
+          "queryParametersJson": "={{ JSON.stringify({ recipient: { id: $('Facebook Trigger').item.json.messaging[0].sender.id }, messaging_type: 'RESPONSE', message: { text: $json.output } }) }}"
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [360, 0],
+      "id": "3f7f9c0a-4444-4a1a-8b1a-aaaaaaaaaaa4",
+      "name": "Send Messenger Reply",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Facebook Graph account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Facebook Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Messenger Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
